@@ -73,7 +73,7 @@ if uploaded_file is not None:
         if col in batch_data.columns:
             batch_data[col] = batch_data[col].map(mapping).fillna(0).astype(int)
 
-    # Ensure columns are in the correct order and only those expected by the model
+    # Ensure all required columns are present and in the correct order
     feature_order = [
         'age',
         'workclass',
@@ -88,7 +88,11 @@ if uploaded_file is not None:
         'capital-loss',
         'hours-per-week'
     ]
-    batch_data = batch_data[[col for col in feature_order if col in batch_data.columns]]
+    # Fill missing columns with 0 or a safe default
+    for col in feature_order:
+        if col not in batch_data.columns:
+            batch_data[col] = 0
+    batch_data = batch_data[feature_order]
 
     st.write("Uploaded data preview (preprocessed):", batch_data.head())
     batch_preds = model.predict(batch_data)
