@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import joblib
@@ -71,7 +70,26 @@ if uploaded_file is not None:
         ['workclass', 'marital-status', 'occupation', 'relationship', 'race', 'gender', 'native-country'],
         [workclass_map, marital_status_map, occupation_map, relationship_map, race_map, gender_map, native_country_map]
     ):
-        batch_data[col] = batch_data[col].map(mapping).fillna(0).astype(int)
+        if col in batch_data.columns:
+            batch_data[col] = batch_data[col].map(mapping).fillna(0).astype(int)
+
+    # Ensure columns are in the correct order and only those expected by the model
+    feature_order = [
+        'age',
+        'workclass',
+        'marital-status',
+        'occupation',
+        'relationship',
+        'race',
+        'gender',
+        'native-country',
+        'educational-num',
+        'capital-gain',
+        'capital-loss',
+        'hours-per-week'
+    ]
+    batch_data = batch_data[[col for col in feature_order if col in batch_data.columns]]
+
     st.write("Uploaded data preview (preprocessed):", batch_data.head())
     batch_preds = model.predict(batch_data)
     batch_data['PredictedClass'] = batch_preds
