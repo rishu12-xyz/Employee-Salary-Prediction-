@@ -50,14 +50,33 @@ input_dict = {
     'capital-loss': capital_loss,
     'hours-per-week': hours_per_week
 }
+
 input_df = pd.DataFrame([input_dict])
 
-st.write("### 🔎 Input Data (preprocessed)")
-st.write(input_df)
+feature_order = [
+    'age',
+    'workclass',
+    'marital-status',
+    'occupation',
+    'relationship',
+    'race',
+    'gender',
+    'native-country',
+    'educational-num',
+    'capital-gain',
+    'capital-loss',
+    'hours-per-week'
+]
 
-if st.button("Predict Salary Class"):
-    prediction = model.predict(input_df)
-    st.success(f"✅ Prediction: {prediction[0]}")
+# Check columns for single prediction
+if list(input_df.columns) != feature_order:
+    st.error(f"Input columns do not match model features.\nExpected: {feature_order}\nGot: {list(input_df.columns)}")
+else:
+    st.write("### 🔎 Input Data (preprocessed)")
+    st.write(input_df)
+    if st.button("Predict Salary Class"):
+        prediction = model.predict(input_df)
+        st.success(f"✅ Prediction: {prediction[0]}")
 
 st.markdown("---")
 st.markdown("#### 📂 Batch Prediction")
@@ -73,32 +92,15 @@ if uploaded_file is not None:
         if col in batch_data.columns:
             batch_data[col] = batch_data[col].map(mapping).fillna(0).astype(int)
 
-    # Ensure all required columns are present and in the correct order
-    feature_order = [
-        'age',
-        'workclass',
-        'marital-status',
-        'occupation',
-        'relationship',
-        'race',
-        'gender',
-        'native-country',
-        'educational-num',
-        'capital-gain',
-        'capital-loss',
-        'hours-per-week'
-    ]
-    # Fill missing columns with 0 or a safe default
-    for col in feature_order:
-        if col not in batch_data.columns:
-            batch_data[col] = 0
-    batch_data = batch_data[feature_order]
-
-    st.write("Uploaded data preview (preprocessed):", batch_data.head())
-    batch_preds = model.predict(batch_data)
-    batch_data['PredictedClass'] = batch_preds
-    st.write("✅ Predictions:")
-    st.write(batch_data.head())
-    csv = batch_data.to_csv(index=False).encode('utf-8')
-    st.download_button("Download Predictions CSV", csv, file_name='predicted_classes.csv', mime='text/csv')
+    # Strict check for columns and order
+    if list(batch_data.columns) != feature_order:
+        st.error(f"Batch CSV columns do not match model features.\nExpected: {feature_order}\nGot: {list(batch_data.columns)}")
+    else:
+        st.write("Uploaded data preview (preprocessed):", batch_data.head())
+        batch_preds = model.predict(batch_data)
+        batch_data['PredictedClass'] = batch_preds
+        st.write("✅ Predictions:")
+        st.write(batch_data.head())
+        csv = batch_data.to_csv(index=False).encode('utf-8')
+        st.download_button("Download Predictions CSV", csv, file_name='predicted_classes.csv', mime='text/csv')
 
